@@ -11,3 +11,25 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
+
+body,html {
+
+	margin:0;
+	padding:0;
+}
+canvas {
+  border : 1px solid black;
+  margin: auto;
+  display: block;
+}
+h1 {
+  text-align:center;
+}
+
+#gameStats{ 
+  width: 500px;
+  height: 100px;
+  margin:auto;
+}
+
+
