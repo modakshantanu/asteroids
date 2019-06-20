@@ -1,5 +1,5 @@
 import {wrapAround, rotateVector2d} from '../utils/2dgrid';
-
+import {randomBetween} from '../utils/math';
 const degToRadians = deg => deg*Math.PI/180;
 const rotateUnit = (degrees) => {
 	var radians = degToRadians(degrees);
@@ -15,21 +15,22 @@ export default class Asteroid {
 		this.dy = args.dy || 0;
 		this.dr = args.dr || 0;
 		this.distances = args.vertexDistances || [-1];
-
-		
 		this.sizeCategory = args.sizeCategory || 3;
+
 		this.delete = false;
-	
+
+		// If distances were not manually provided, generate random distances 
 		if (this.distances.length === 1) {
 			this.distances.splice(0,1);
 			let m = this.sizeCategory*10;
 			for (let i = 0; i < 6; i++) {
-				let r = this.sizeCategory*(Math.random()-0.5)*3;
+				let r = this.sizeCategory*randomBetween(-2,2);
 				this.distances.push(Math.round(m + r));
 				
 			}
 		}
-
+		
+		// Generate array of points of the asteroid
 		this.points = this.distances.map((v,i) => {
 			var unitVector = rotateUnit(60*i);
 			return {x: v*unitVector.x, y: v*unitVector.y};
@@ -46,7 +47,7 @@ export default class Asteroid {
 		
 		({x:this.x , y:this.y} = wrapAround({x:this.x,y:this.y}));
 		
-
+		// Generate an svg path string from the points given
 		var pathString = `M${ this.points[0].x} ${this.points[0].y} `
 		for (let i = 1; i < this.points.length; i++) {
 			pathString += `L ${this.points[i].x} ${this.points[i].y} `;
@@ -63,11 +64,12 @@ export default class Asteroid {
 		ctx.fillStyle = "#ffffff";
 		ctx.lineWidth = 1;
 		var path = new Path2D(pathString);
-
 		ctx.stroke(path);
 		ctx.restore();
 
 	}
+
+	// Get array of points showing the asteroid
 	getHitbox() {
 		let hitbox = this.points.map(e => {
 			let {x,y} = rotateVector2d(e,this.r);
