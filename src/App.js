@@ -6,8 +6,8 @@ import Asteroid from './gameComponents/Asteroid';
 import Bullet from './gameComponents/Bullet';
 import { distance } from './utils/2dgrid';
 import {rotateVector2d} from './utils/2dgrid';
-import {randomBetween} from './utils/math';
-import { stat } from 'fs';
+import {randomBetween, checkPolygonIntersection} from './utils/math';
+
 
 
 var GameStatus = {
@@ -34,7 +34,7 @@ class App extends React.Component {
 		this.draw = this.draw.bind(this);
 		this.reset = this.reset.bind(this);
 		this.nextLevel = this.nextLevel.bind(this);
-		this.asteroids = [new Asteroid({x:150,y:150,dx:2,dy:-1,dr:3,sizeCategory:3})];
+		this.asteroids = [new Asteroid({x:150,y:150,dx:2,dy:1,dr:3,sizeCategory:3})];
 		this.bullets = [];
 		this.gameStatus = GameStatus.RUNNING;
 
@@ -62,17 +62,17 @@ class App extends React.Component {
 		animationFrameId  = requestAnimationFrame(this.draw);
 	}
 
-	nextLevel() {
+	nextLevel(level) {
 
 
 		this.ship = new Ship({x:50, y:50});
-		for (let i = 0; i < this.state.level + 1; i++) {
+		for (let i = 0; i < level; i++) {
 			let newX,newY,newDx,newDy,newDr;
 
 			newX = randomBetween(200,500);
 			newY = randomBetween(200,500);
 			let velMag = randomBetween(1,3);
-			({x:newDx,y:newDy} = rotateVector2d(0,velMag,randomBetween(0,360)));
+			({x:newDx,y:newDy} = rotateVector2d({x:0,y:velMag},randomBetween(0,360)));
 			newDr = randomBetween(-2,2);
 			this.asteroids.push(new Asteroid({x:newX, y:newY, dx: newDx, dy: newDy, dr: newDr}));
 
@@ -105,15 +105,15 @@ class App extends React.Component {
 		// Check collisions between asteroids and bullets
 		this.bullets.forEach((b,i,bArr) => {
 			this.asteroids.forEach((a,j,aArr) => {
-				if (distance(b.x, b.y, a.x, a.y) < b.radius + a.radius) {
+				if (distance(b.x, b.y, a.x, a.y) < b.radius + a.radius && checkPolygonIntersection([{x:b.x,y:b.y}], a.getHitbox())) {
 					bArr.splice(i,1);
 					var nextSize = a.sizeCategory-1;
 					
 
 					if (nextSize > 0) {
-						let {x:newDx,y:newDy} = rotateVector2d(a.dx,a.dy,Math.random()*30 + 30);
+						let {x:newDx,y:newDy} = rotateVector2d({x:a.dx,y:a.dy},Math.random()*30 + 30);
 						aArr.push(new Asteroid({x:a.x,y:a.y,dx:newDx*1.2,dy:newDy*1.2,dr: 6* Math.random() - 3,sizeCategory:nextSize}));
-						({x:newDx,y: newDy} = rotateVector2d(a.dx,a.dy,-(Math.random()*30 + 30)));
+						({x:newDx,y: newDy} = rotateVector2d({x:a.dx,y:a.dy},-(Math.random()*30 + 30)));
 						aArr.push(new Asteroid({x:a.x,y:a.y,dx:newDx*1.2,dy:newDy*1.2,dr: 6* Math.random() - 3,sizeCategory:nextSize}));
 					}
 					aArr.splice(j,1);
@@ -129,10 +129,12 @@ class App extends React.Component {
 		this.asteroids.forEach((a,i,arr) => {
 			if (distance(this.ship.x, this.ship.y, a.x,a.y) < this.ship.radius + a.radius) {
 
-
-				this.gameStatus = GameStatus.OVER;
-				ctx.fillStyle = "#000";
-				ctx.fillText("Game Over",200,300);
+				
+				if (checkPolygonIntersection(this.ship.getHitbox(), a.getHitbox())) {
+					this.gameStatus = GameStatus.OVER;
+					ctx.fillStyle = "#000";
+					ctx.fillText("Game Over",200,300);
+				}
 		
 			}
 		})
@@ -182,6 +184,7 @@ class App extends React.Component {
 					<button ref = "reset" onClick = {this.reset}>Reset</button>
 					<div id = "Score">Score: {this.state.score}</div>
 					<div id = "level">Level: {this.state.level}</div>
+					<button ref = "debug" onClick = {() => console.log(this.asteroids[0].getHitbox())}>Debug</button>
 				</div>
 			</div>
 		);

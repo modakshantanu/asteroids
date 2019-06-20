@@ -1,4 +1,4 @@
-import {wrapAround} from '../utils/2dgrid';
+import {wrapAround, rotateVector2d} from '../utils/2dgrid';
 
 const degToRadians = deg => deg*Math.PI/180;
 const rotateUnit = (degrees) => {
@@ -66,6 +66,15 @@ export default class Asteroid {
 
 		ctx.stroke(path);
 		ctx.restore();
+
+	}
+	getHitbox() {
+		let hitbox = this.points.map(e => {
+			let {x,y} = rotateVector2d(e,this.r);
+			return {x: x+this.x, y: y + this.y};
+		});
+
+		return hitbox;
 
 	}
 }

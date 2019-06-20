@@ -14,7 +14,8 @@ export function distance(x1,y1,x2,y2) {
 }
 
 // Rotates the vector (x,y) anticlockwise by deg degrees
-export function rotateVector2d(x,y,deg) {
+export function rotateVector2d(vect,deg) {
+	let {x,y} = vect;
 	let rad = deg*Math.PI/180;
 	let cos = Math.cos(rad);
 	let sin = Math.sin(rad);

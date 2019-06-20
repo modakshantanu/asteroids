@@ -1,3 +1,5 @@
+import { rotateVector2d } from "../utils/2dgrid";
+
 export default class Ship {
 	constructor(args) {
 		this.x = args.x;
@@ -12,15 +14,15 @@ export default class Ship {
 	render(state) {
 
 		if (state.input.pressedKeys.left) {
-			this.angle -= 5;
+			this.angle -= 7;
 		}
 		if (state.input.pressedKeys.right) {
-			this.angle += 5;
+			this.angle += 7;
 		}
 		if(state.input.pressedKeys.forward) {
 			var forwardAngle = this.angle - 90;
-			this.dx += 0.15*Math.cos(forwardAngle * Math.PI / 180);
-			this.dy += 0.15*Math.sin(forwardAngle * Math.PI / 180);
+			this.dx += 0.25*Math.cos(forwardAngle * Math.PI / 180);
+			this.dy += 0.25*Math.sin(forwardAngle * Math.PI / 180);
 		}
 		
 
@@ -32,10 +34,12 @@ export default class Ship {
 		else if (this.x < 0) this.x = 500;
 		if (this.y> 500) this.y = 0;
 		else if (this.y < 0) this.y = 500;
+		if( this.angle > 360) this.angle -= 360;
+		if (this.angle < 0) this.angle += 360;
 
 		// Drag 
-		this.dx *= 0.98;
-		this.dy *= 0.98;
+		this.dx *= 0.97;
+		this.dy *= 0.97;
 
 		
 
@@ -56,5 +60,21 @@ export default class Ship {
 		ctx.fill(); ctx.stroke();
 		ctx.restore();
 	
+	}
+
+	getHitbox() {
+		let hitbox = [];
+		hitbox.push({x: 12.49, y: 7.21});
+		hitbox.push({x: 0, y: -14.44});
+		hitbox.push({x: -12.49, y: 7.21});
+
+	
+		hitbox = hitbox.map((e) => {
+			
+			let {x,y} = rotateVector2d(e,this.angle);
+			return {x:x+this.x, y:y+this.y};
+		});
+		return hitbox;
+		
 	}
 }
