@@ -1,11 +1,11 @@
-import { rotateVector2d } from "../utils/2dgrid";
+import { rotateVector2d, wrapAround } from "../utils/2dgrid";
+import { relativeCoords } from "../utils/camera";
+import { Vect } from "../utils/Vect";
 
 export default class Ship {
 	constructor(args) {
-		this.x = args.x;
-		this.y = args.y;
-		this.dx = args.dx || 0;
-		this.dy = args.dy || 0;
+		this.pos = args.pos;
+		this.vel = args.vel || new Vect(0,0);
 		this.radius = 14.5;
 		this.angle = args.angle || 0;
 		this.lastFiredTime = new Date();
@@ -13,6 +13,7 @@ export default class Ship {
 
 	render(state) {
 
+		
 		if (state.input.pressedKeys.left) {
 			this.angle -= 7;
 		}
@@ -21,32 +22,30 @@ export default class Ship {
 		}
 		if(state.input.pressedKeys.forward) {
 			var forwardAngle = this.angle - 90;
-			this.dx += 0.25*Math.cos(forwardAngle * Math.PI / 180);
-			this.dy += 0.25*Math.sin(forwardAngle * Math.PI / 180);
+			
+			this.vel = this.vel.add(new Vect(0.25,0).rotate(forwardAngle * Math.PI / 180));
 		}
 		
 
-		this.x += this.dx;
-		this.y += this.dy;
+		this.pos = this.pos.add(this.vel);
+		this.pos = wrapAround(this.pos);
 
-		// wrapping around
-		if (this.x > 500) this.x = 0;
-		else if (this.x < 0) this.x = 500;
-		if (this.y> 500) this.y = 0;
-		else if (this.y < 0) this.y = 500;
 		if( this.angle > 360) this.angle -= 360;
 		if (this.angle < 0) this.angle += 360;
 
 		// Drag 
-		this.dx *= 0.97;
-		this.dy *= 0.97;
-
+		this.vel = this.vel.dot(0.97);
+		
+		var temp = this.pos;
+		if (state.shipCam) {
+			temp = relativeCoords(temp,temp);
+		}
 		
 
 		const ctx = state.context;
 		ctx.save();
 		ctx.translate(0.5,0.5);
-		ctx.translate(this.x,this.y);
+		ctx.translate(temp.x,temp.y);
 		ctx.rotate(this.angle * Math.PI/180);
 		ctx.strokeStyle = "#000000";
 		ctx.fillStyle = "#888888";
@@ -72,7 +71,7 @@ export default class Ship {
 		hitbox = hitbox.map((e) => {
 			
 			let {x,y} = rotateVector2d(e,this.angle);
-			return {x:x+this.x, y:y+this.y};
+			return {x:x+this.pos.x, y:y+this.pos.y};
 		});
 		return hitbox;
 		

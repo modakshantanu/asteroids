@@ -1,16 +1,20 @@
-
+import { Vect } from "./Vect";
+import {constants} from "./constants";
 
 export function wrapAround(position) {
+
+	let {width,height} = constants.gameBounds;
+
 	var {x,y} = position;
-	if (position.x > 500) x = 0;
-	else if (position.x < 0) x = 500;
-	if (position.y> 500) y = 0;
-	else if (position.y < 0) y = 500;
-	return {x,y};
+	while (x >width) x -= width;
+	while (x < 0) x += width;
+	while (y > height) y -= height;
+	while (y < 0) y += height;
+	return new Vect(x,y);
 }
 
-export function distance(x1,y1,x2,y2) {
-	return Math.sqrt((x1-x2)**2 + (y1-y2)**2);
+export function distance(v1,v2) {
+	return Math.sqrt((v1.x - v2.x)**2 + (v1.y-v2.y)**2);
 }
 
 // Rotates the vector (x,y) anticlockwise by deg degrees
@@ -24,3 +28,4 @@ export function rotateVector2d(vect,deg) {
 		y : sin*x + cos*y
 	}
 }
+

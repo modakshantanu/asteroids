@@ -1,5 +1,7 @@
 import {wrapAround, rotateVector2d} from '../utils/2dgrid';
 import {randomBetween} from '../utils/math';
+import { relativeCoords } from '../utils/camera';
+import { Vect } from '../utils/Vect';
 const degToRadians = deg => deg*Math.PI/180;
 const rotateUnit = (degrees) => {
 	var radians = degToRadians(degrees);
@@ -8,11 +10,9 @@ const rotateUnit = (degrees) => {
 
 export default class Asteroid {
 	constructor(args) {
-		this.x = args.x;
-		this.y = args.y;
+		this.pos=  args.pos || new Vect(0,0);
 		this.r = args.r || 0;
-		this.dx = args.dx ||0;
-		this.dy = args.dy || 0;
+		this.vel = args.vel || new Vect(0,0);
 		this.dr = args.dr || 0;
 		this.distances = args.vertexDistances || [-1];
 		this.sizeCategory = args.sizeCategory || 3;
@@ -39,14 +39,18 @@ export default class Asteroid {
 		this.radius = this.distances.reduce((a,b) => Math.max(a,b));
 	}
 
-	render(state) {
+	render(state,ship) {
 
-		this.x += this.dx;
-		this.y += this.dy;
+		this.pos = this.pos.add(this.vel);
 		this.r += this.dr;
 		
-		({x:this.x , y:this.y} = wrapAround({x:this.x,y:this.y}));
+		this.pos = wrapAround(this.pos);
 		
+		var temp = this.pos;
+		if (state.shipCam) {
+			temp = relativeCoords(temp,ship);
+		}
+
 		// Generate an svg path string from the points given
 		var pathString = `M${ this.points[0].x} ${this.points[0].y} `
 		for (let i = 1; i < this.points.length; i++) {
@@ -58,7 +62,7 @@ export default class Asteroid {
 		ctx.save();
 		
 		ctx.translate(0.5,0.5);
-		ctx.translate(this.x,this.y);
+		ctx.translate(temp.x,temp.y);
 		ctx.rotate(this.r * Math.PI/180);
 		ctx.strokeStyle = "#000000";
 		ctx.fillStyle = "#ffffff";
@@ -67,16 +71,19 @@ export default class Asteroid {
 		ctx.stroke(path);
 		ctx.restore();
 
+		
+
 	}
 
 	// Get array of points showing the asteroid
 	getHitbox() {
 		let hitbox = this.points.map(e => {
 			let {x,y} = rotateVector2d(e,this.r);
-			return {x: x+this.x, y: y + this.y};
+			return {x: x+this.pos.x, y: y + this.pos.y};
 		});
 
-		return hitbox;
 
+		return hitbox;
+		
 	}
 }
