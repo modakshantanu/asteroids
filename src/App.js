@@ -9,7 +9,8 @@ import {randomBetween, checkPolygonIntersection} from './utils/math';
 import {relativeCoords} from './utils/camera';
 import { Vect } from './utils/Vect';
 import { drawDots } from './gameComponents/background';
-import dot from "./dot.png";
+import { constants } from "./utils/constants";
+import { Minimap } from './gameComponents/Minimap';
 
 
 
@@ -28,6 +29,7 @@ class App extends React.Component {
 		this.state = {
 			input: new InputManager(),
 			context: null,
+			minimapContext: null,
 			score: 0,
 			level: 1,
 			shipCam: false,
@@ -44,6 +46,7 @@ class App extends React.Component {
 		this.gameStatus = GameStatus.RUNNING;
 		this.asteroids = [];
 		this.bullets = [];
+		this.minimap = new Minimap();
 
 		// Initialize level 1
 		this.initLevel(1);
@@ -55,18 +58,19 @@ class App extends React.Component {
 		
 		this.state.input.bindKeys(); // Setup inputhandler
 		const context = this.refs.canvas.getContext('2d'); //Setup Context
-		this.setState({context:context});
+		const minimapContext = this.refs.minimap.getContext('2d');
+		this.setState({context:context, minimapContext:minimapContext});
 		animationFrameId = requestAnimationFrame(this.draw); // Start animation
 		
 
 		var off = document.createElement('canvas');
-		off.width = 500;
-		off.height = 500;
+		off.width = constants.gameBounds.width;
+		off.height = constants.gameBounds.height;
 		var ctx = off.getContext('2d');
-		ctx.fillStyle = "#888";
+		ctx.fillStyle = "#000";
 
-		for (let i = 0; i < 500; i += 10) {
-			for (let j = 0; j < 500; j += 10) {
+		for (let i = 0; i < constants.canvasBounds.width; i += 20) {
+			for (let j = 0; j < constants.canvasBounds.height; j += 20) {
 				ctx.fillRect(i,j,1,1);
 			}
 		}
@@ -98,7 +102,7 @@ class App extends React.Component {
 			// Generates an asteroid with random position, velocity and shape
 			let velMag = randomBetween(1,3);
 			let newDr = randomBetween(-2,2);
-			let newPos = new Vect(randomBetween(200,500), randomBetween(200,500));
+			let newPos = new Vect(randomBetween(200,constants.gameBounds.width), randomBetween(200,constants.gameBounds.width));
 			let newVel = new Vect(velMag,0).rotate(randomBetween(0,360));
 
 			this.asteroids.push(new Asteroid({pos : newPos, vel:newVel, dr: newDr}));
@@ -115,14 +119,11 @@ class App extends React.Component {
 
 		ctx.fillStyle = "#fff";
 		ctx.font = "30px Arial";
-		ctx.fillRect(0,0,500,500); // Clear screen
+		ctx.fillRect(0,0,constants.canvasBounds.width,constants.canvasBounds.height); // Clear screen
 		
 		//ctx.drawImage(this.back,0,0);
 
 		drawDots(ctx,this.back, (this.state.shipCam?this.ship.pos : {x:250,y:250}));
-
-
-
 
 		// Fire a new bullet if the previous one was fired >300ms ago and space is held down
 		if (this.state.input.pressedKeys.space && new Date().getTime() - this.ship.lastFiredTime > 300) {
@@ -167,7 +168,7 @@ class App extends React.Component {
 				
 				this.gameStatus = GameStatus.OVER;
 				ctx.fillStyle = "#000";
-				ctx.fillText("Game Over",200,300);
+				ctx.fillText("Game Over",200,200);
 			}
 		})
 
@@ -194,6 +195,8 @@ class App extends React.Component {
 			this.setState((state) => ({level:state.level+1}));
 		}
 
+		this.minimap.render(this.state, this.ship);
+
 		// Show next frame, if GameStatus is running
 		if (this.gameStatus === GameStatus.RUNNING)
 			animationFrameId = requestAnimationFrame(this.draw);
@@ -204,10 +207,8 @@ class App extends React.Component {
 	}
 
 	debugFunc() {
-		console.log(relativeCoords(
-			{x:this.asteroids[0].x,y:this.asteroids[0].y},
-			{x:this.ship.x,y:this.ship.y}
-		))
+		console.log(this.asteroids[0].pos);
+		console.log(relativeCoords(this.asteroids[0].pos, this.ship.pos));
 	}
 
 	cameraHandler() {
@@ -222,13 +223,14 @@ class App extends React.Component {
 		return (
 			<div>
 				<h1>Asteroids!</h1>
-				<canvas ref = "canvas" width = "500" height = "500"/>
+				<canvas ref = "canvas" id = "canvas" width = {constants.canvasBounds.width} height = {constants.canvasBounds.height}/>
 				<div id = "gameStats">
 					<button ref = "reset" onClick = {this.resetHandler}>Reset</button>
 					<div id = "Score">Score: {this.state.score}</div>
 					<div id = "level">Level: {this.state.level}</div>
 					<button ref = "debug" onClick = {this.debugFunc}>Debug</button><br/>
 					<input type = "checkbox" ref = "cam" checked = {this.state.shipCam} onChange = {this.cameraHandler.bind(this)}/> Ship Cam <br/>
+					<canvas ref = "minimap" id = "minimap" width = "100" height = "100"/>
 				</div>
 			</div>
 		);

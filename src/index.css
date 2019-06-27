@@ -18,9 +18,20 @@ body,html {
 	padding:0;
 }
 canvas {
-  border : 1px solid black;
+  border : 2px solid black;
   margin: auto;
   display: block;
+}
+
+#gameStats {
+  position: relative;
+}
+
+#minimap {
+
+  position: absolute;
+  top:0px;
+  right:0px;
 }
 h1 {
   text-align:center;

@@ -1,15 +1,15 @@
 import { Vect } from "./Vect";
 import {constants} from "./constants";
 
-export function wrapAround(position) {
+export function wrapAround(position, bounds = constants.gameBounds) {
 
-	let {width,height} = constants.gameBounds;
+	let {width,height} = bounds;
 
 	var {x,y} = position;
-	while (x >width) x -= width;
-	while (x < 0) x += width;
-	while (y > height) y -= height;
-	while (y < 0) y += height;
+	if (x > width) x -= width;
+	if (x < 0) x += width;
+	if (y > height) y -= height;
+	if (y < 0) y += height;
 	return new Vect(x,y);
 }
 

@@ -23,7 +23,7 @@ export default class Ship {
 		if(state.input.pressedKeys.forward) {
 			var forwardAngle = this.angle - 90;
 			
-			this.vel = this.vel.add(new Vect(0.25,0).rotate(forwardAngle * Math.PI / 180));
+			this.vel = this.vel.add(new Vect(0.20,0).rotate(forwardAngle * Math.PI / 180));
 		}
 		
 
@@ -34,7 +34,7 @@ export default class Ship {
 		if (this.angle < 0) this.angle += 360;
 
 		// Drag 
-		this.vel = this.vel.dot(0.97);
+		this.vel = this.vel.dot(0.98);
 		
 		var temp = this.pos;
 		if (state.shipCam) {
